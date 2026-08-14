@@ -1,0 +1,34 @@
+---
+sidebar_position: 1
+---
+
+# Introducción
+
+**Message Broker Celula** es una plataforma de auto-servicio para provisionar y
+gestionar bases de datos, expuesta a través de una API REST y un frontend web.
+Sigue una arquitectura **database-centric**: casi toda la lógica de negocio
+(validaciones, permisos, cálculos) vive en Stored Procedures/Views/Functions de
+SQL Server, no en el código de la aplicación.
+
+## Componentes del proyecto
+
+El sistema está dividido en tres repositorios:
+
+- **[backend-core](https://github.com/message-broker-celula/backend-core)** —
+  API REST en FastAPI (Python). Autentica con OAuth (Google/GitHub) + JWT,
+  aplica rate limiting, y traslada cada operación a un Stored
+  Procedure/View/Function en SQL Server. Nunca implementa reglas de negocio
+  en Python.
+- **[frontend-landing](https://github.com/message-broker-celula/frontend-landing)** —
+  Interfaz web (TypeScript) donde el usuario se autentica, crea sus bases de
+  datos y consume el resto de servicios de la plataforma.
+- **infraestructure-and-docs** — Este sitio, además de la configuración de
+  infraestructura/despliegue del proyecto.
+
+## Por dónde empezar
+
+- [Backend Core](/docs/backend-core) — autenticación, bases de datos,
+  subdominios DNS, IA como servicio, y los módulos internos (roles, células,
+  auditoría, métricas).
+
+- [Arquitectura — Visión general](/docs/arquitectura/vision-general) — descripción de los tres repositorios, el patrón database-centric y cómo se comunican.
