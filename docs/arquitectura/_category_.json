@@ -1,0 +1,8 @@
+{
+  "label": "Arquitectura",
+  "position": 0,
+  "link": {
+    "type": "generated-index",
+    "description": "Visión general de cómo se comunican los tres repositorios del proyecto."
+  }
+}

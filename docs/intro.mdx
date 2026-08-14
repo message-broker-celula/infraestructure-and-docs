@@ -4,22 +4,31 @@ sidebar_position: 1
 
 # Introducción
 
-La plataforma "Database-Centric Architecture" sitúa la base de datos como el núcleo de las operaciones: los servicios, las integraciones y la lógica de negocio se diseñan alrededor de modelos de datos consistentes y APIs centradas en los datos.
+**Message Broker Celula** es una plataforma de auto-servicio para provisionar y
+gestionar bases de datos, expuesta a través de una API REST y un frontend web.
+Sigue una arquitectura **database-centric**: casi toda la lógica de negocio
+(validaciones, permisos, cálculos) vive en Stored Procedures/Views/Functions de
+SQL Server, no en el código de la aplicación.
 
-Esta documentación cubre la arquitectura general y los componentes principales. La plataforma se compone, de forma general, de tres repositorios principales:
+## Componentes del proyecto
 
-- `infraestructure`: Infraestructura y automatización (IaC, despliegue, redes, subdominios y configuración de DNS). Contiene scripts y plantillas para aprovisionar entornos.
-- `backend-core`: Servicios backend y APIs que implementan la lógica de negocio, orquestación y puertas de enlace (incluye el `AI Gateway` documentado en la sección de backend-core).
-- `data-platform`: Componentes y repositorios que gestionan esquemas, migraciones, backups y conectores hacia los distintos motores de base de datos.
+El sistema está dividido en tres repositorios:
 
-Próximos pasos:
+- **[backend-core](https://github.com/message-broker-celula/backend-core)** —
+  API REST en FastAPI (Python). Autentica con OAuth (Google/GitHub) + JWT,
+  aplica rate limiting, y traslada cada operación a un Stored
+  Procedure/View/Function en SQL Server. Nunca implementa reglas de negocio
+  en Python.
+- **[frontend-landing](https://github.com/message-broker-celula/frontend-landing)** —
+  Interfaz web (TypeScript) donde el usuario se autentica, crea sus bases de
+  datos y consume el resto de servicios de la plataforma.
+- **infraestructure-and-docs** — Este sitio, además de la configuración de
+  infraestructura/despliegue del proyecto.
 
-- Leer la sección de **Arquitectura** para entender el diseño global: [Arquitectura](#arquitectura).
-- Revisar los detalles del backend y sus integraciones: [Backend Core - AI Gateway](/docs/backend-core/ai-gateway).
+## Por dónde empezar
 
-## Arquitectura
+- [Backend Core](/docs/backend-core) — autenticación, bases de datos,
+  subdominios DNS, IA como servicio, y los módulos internos (roles, células,
+  auditoría, métricas).
 
-La arquitectura Database-Centric prioriza la consistencia y la trazabilidad de los datos. Los servicios están diseñados para exponer contratos claros sobre los modelos de datos y favorecer operaciones que reduzcan la duplicación y las inconsistencias.
-
-Sigue a continuación con la sección de `backend-core` para ver casos concretos, patrones de integración y operaciones de base de datos.
-
+- [Arquitectura — Visión general](/docs/arquitectura/vision-general) — descripción de los tres repositorios, el patrón database-centric y cómo se comunican.
