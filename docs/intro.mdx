@@ -2,46 +2,24 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Introducción
 
-Let's discover **Docusaurus in less than 5 minutes**.
+La plataforma "Database-Centric Architecture" sitúa la base de datos como el núcleo de las operaciones: los servicios, las integraciones y la lógica de negocio se diseñan alrededor de modelos de datos consistentes y APIs centradas en los datos.
 
-## Getting Started
+Esta documentación cubre la arquitectura general y los componentes principales. La plataforma se compone, de forma general, de tres repositorios principales:
 
-Get started by **creating a new site**.
+- `infraestructure`: Infraestructura y automatización (IaC, despliegue, redes, subdominios y configuración de DNS). Contiene scripts y plantillas para aprovisionar entornos.
+- `backend-core`: Servicios backend y APIs que implementan la lógica de negocio, orquestación y puertas de enlace (incluye el `AI Gateway` documentado en la sección de backend-core).
+- `data-platform`: Componentes y repositorios que gestionan esquemas, migraciones, backups y conectores hacia los distintos motores de base de datos.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+Próximos pasos:
 
-### What you'll need
+- Leer la sección de **Arquitectura** para entender el diseño global: [Arquitectura](#arquitectura).
+- Revisar los detalles del backend y sus integraciones: [Backend Core - AI Gateway](/docs/backend-core/ai-gateway).
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+## Arquitectura
 
-## Generate a new site
+La arquitectura Database-Centric prioriza la consistencia y la trazabilidad de los datos. Los servicios están diseñados para exponer contratos claros sobre los modelos de datos y favorecer operaciones que reduzcan la duplicación y las inconsistencias.
 
-Generate a new Docusaurus site using the **classic template**.
+Sigue a continuación con la sección de `backend-core` para ver casos concretos, patrones de integración y operaciones de base de datos.
 
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
