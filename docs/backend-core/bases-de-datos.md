@@ -181,6 +181,23 @@ medio.
 | `DELETE /public/postgres/databases/{id}` | `DELETE /databases/{id}` |
 | `POST /public/postgres/api-key/rotate` | -- |
 | `DELETE /public/postgres/api-key` | -- |
+| `GET /public/postgres/metrics` | -- |
+
+### Métricas de uso
+
+```json
+// GET /public/postgres/metrics -- solo lo del propio equipo, nunca de otros
+{
+  "total_databases": 1,
+  "active_databases": 1,
+  "storage_used_mb": 0.0,
+  "storage_limit_mb": 20.0
+}
+```
+
+Genérico por construcción: cualquier equipo que se registre bajo
+`/public/postgres/register` obtiene sus propias métricas del mismo modo —
+no está atado a un equipo en particular.
 
 ### Por qué esto no necesita tocar nada del aprovisionamiento
 
@@ -202,6 +219,7 @@ entorno de prueba aparte.
 
 El canal `/public/postgres` también está verificado de punta a punta:
 registro real → base PostgreSQL real creada y conectada
-(`SELECT version()` respondió) → rotación de clave (la anterior murió al
+(`SELECT version()` respondió) → `/metrics` reflejó el cambio en tiempo
+real (0 → 1 base activa) → rotación de clave (la anterior murió al
 instante, `401` confirmado) → borrado de la base → revocación de la
 clave — ciclo completo contra producción, no un entorno aparte.
