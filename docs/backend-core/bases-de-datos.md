@@ -143,6 +143,55 @@ psql "host=… port=30412 dbname=inventario user=app_user password=…"
   el registro en SQL falla después, el contenedor recién creado se destruye
   automáticamente en vez de quedar huérfano.
 
+## PostgreSQL para otros equipos (sin login humano)
+
+Todo lo de arriba asume un usuario humano con sesión OAuth en la
+plataforma. Para que **otro equipo** consuma el servicio de PostgreSQL
+directo desde su propio backend — sin que un humano tenga que iniciar
+sesión en el navegador cada vez — existe un canal aparte, machine-to-
+machine, bajo `/public/postgres`. Es el mismo patrón que este backend usa
+para consumir el Ollama Gateway de IA: registro público → API key de larga
+duración → `Authorization: Bearer` en cada llamada, sin OAuth de por
+medio.
+
+### Registro (una sola vez)
+
+```json
+// POST /public/postgres/register -- sin autenticación previa
+{
+  "team_name": "Idempotencia",
+  "contact_email": "equipo@idempotencia.dev"
+}
+
+// 201 -- api_key solo se muestra ACA
+{
+  "client_id": "…",
+  "api_key": "pgk_live_…",
+  "key_prefix": "pgk_live_9tK2h"
+}
+```
+
+### Ciclo de vida (misma forma que `/databases`, pero con API key)
+
+| Endpoint | Igual que |
+|---|---|
+| `POST /public/postgres/databases` (solo `nombre_bd`, motor fijo a `POSTGRES`) | `POST /databases` |
+| `GET /public/postgres/databases` | `GET /databases` |
+| `GET /public/postgres/databases/{id}/credentials` | `GET /databases/{id}/credentials` |
+| `DELETE /public/postgres/databases/{id}` | `DELETE /databases/{id}` |
+| `POST /public/postgres/api-key/rotate` | -- |
+| `DELETE /public/postgres/api-key` | -- |
+
+### Por qué esto no necesita tocar nada del aprovisionamiento
+
+Al registrarse, el equipo externo se guarda como una fila "sombra" en
+`Usuarios` (`oauth_provider = 'EXTERNAL_API'`, sin login real detrás). Con
+eso, **todo** el sistema de bases de datos ya descrito arriba —
+`sp_CrearBD`, el límite de 5 bases activas, el cifrado AES-256, el
+aprovisionamiento real vía el sidecar — sigue funcionando exactamente
+igual, sin ningún cambio. Lo único nuevo es cómo se autentica la llamada
+(clave API en vez de JWT) y el registro público.
+
 ## Estado de verificación
 
 Ambos motores están desplegados en producción y verificados en vivo (no
@@ -150,3 +199,9 @@ solo con tests): se creó, se conectó de verdad (`SELECT version()`), se
 revisó el consumo real de memoria contra el límite configurado, y se borró
 una base de datos real de cada motor contra la API real, no contra un
 entorno de prueba aparte.
+
+El canal `/public/postgres` también está verificado de punta a punta:
+registro real → base PostgreSQL real creada y conectada
+(`SELECT version()` respondió) → rotación de clave (la anterior murió al
+instante, `401` confirmado) → borrado de la base → revocación de la
+clave — ciclo completo contra producción, no un entorno aparte.
