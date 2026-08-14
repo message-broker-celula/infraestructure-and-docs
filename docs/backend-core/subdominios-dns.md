@@ -8,6 +8,14 @@ title: Subdominios DNS por usuario
 Cualquier usuario autenticado puede solicitar un subdominio propio bajo
 `coderhivex.com`, con el formato:
 
+:::tip Forma más simple de usarlo
+Si solo quieres crear tu propio subdominio, no hace falta tocar la API a
+mano: entra al dashboard de la plataforma → pestaña **Dominios (DNS)** →
+escribe el nombre → **Crear Registro DNS**. La API de abajo es para el caso
+en que otro equipo quiera crear/gestionar subdominios de forma programática
+desde su propio backend.
+:::
+
 ```
 [nombre-elegido-por-el-usuario].[nombre-de-su-celula].coderhivex.com
 ```
@@ -75,13 +83,16 @@ contrario.
 Crea el servicio y su registro DNS real.
 
 ```json
-// Request
+// Request -- solo service_name es obligatorio
 {
-  "service_name": "airflow",
-  "service_type": "other",
-  "puerto_interno": 8080
+  "service_name": "airflow"
 }
 ```
+
+`service_type` (default `"other"`), `database_id` y `puerto_interno` son
+opcionales -- pensados para cuando el subdominio sí tiene un servicio real
+detrás. Para un subdominio "suelto" (el caso normal, solo DNS + HTTPS) se
+omiten y quedan `NULL`.
 
 ```json
 // 201
@@ -159,11 +170,18 @@ el subdominio de cualquier usuario, no solo los propios.
 
 ## Estado de verificación
 
-El código está desplegado en producción y cubierto por tests unitarios con
-un cliente Cloudflare simulado (creación, colisión, borrado idempotente,
-verificación de propagación). La verificación en vivo contra la API real de
-Cloudflare está pendiente de que se ajuste el *Client IP Filtering* del
-token en el dashboard de Cloudflare — actualmente rechaza tanto la IP del
-VPS como cualquier IP externa que no esté en la lista permitida. En cuanto
-se ajuste, el mismo flujo end-to-end (crear → confirmar en Cloudflare →
-propagación → HTTPS → borrar) se verificará contra producción real.
+✅ Verificado de punta a punta contra producción real (no solo con tests):
+se creó un subdominio real, se confirmó el registro `A` en el panel de
+Cloudflare, `dns-status` reportó `propagated: true`, y `DELETE` borró el
+registro real sin dejar residuos. El dashboard de la plataforma (pestaña
+Dominios/DNS) ya llama a esta API en vivo, no es un mock.
+
+En el camino se encontraron y corrigieron dos bugs reales:
+- `Servicios.puerto_interno` era `NOT NULL` en SQL Server, lo que bloqueaba
+  **toda** creación de subdominio (el caso normal, sin `puerto_interno`,
+  reventaba con una violación de restricción). Se hizo la columna nullable.
+- El chequeo de "propagado" comparaba la resolución DNS pública contra la
+  IP de origen del VPS, pero como todo registro se crea `proxied: true`, un
+  resolver público nunca devuelve esa IP -- solo las de borde de Cloudflare.
+  El chequeo nunca podía dar `true`. Ahora verifica existencia directo
+  contra la API de Cloudflare (autoritativa, instantáneo).
