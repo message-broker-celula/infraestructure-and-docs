@@ -166,16 +166,21 @@ respuesta = client.chat.completions.create(
 
 ## Estado de verificación
 
-El código está desplegado en producción y cubierto por tests unitarios con
-un cliente del gateway simulado (registro, consulta de estado, rotación,
-revocación, manejo de errores de autenticación/transporte). **La
-verificación en vivo está bloqueada**: el hostname documentado por el
-equipo de IA, `docs.api.idempotencia.andrescortes.dev`, no resuelve en DNS
-público (`NXDOMAIN` confirmado desde múltiples resolvers), y al forzar la
-conexión contra la IP de `api.idempotencia.andrescortes.dev` (que sí
-resuelve) el *handshake* TLS falla por falta de certificado para ese
-nombre exacto — el servicio simplemente no está desplegado bajo ese
-hostname todavía. Es un pendiente del lado de infraestructura del equipo de
-IA, no de este backend. En cuanto el endpoint esté realmente arriba, se
-verificará el flujo completo (emitir → consultar estado → consumir con el
-SDK de OpenAI → ver el consumo reflejado → rotar → revocar).
+✅ Verificado de punta a punta contra el gateway real de producción
+(`qa.api.idempotencia.andrescortes.dev`), no solo con tests unitarios:
+
+1. `POST /ai/api-key` → `201`, clave real emitida.
+2. `GET /ai/api-key` → `status: "approved"`, `can_call_api: true`.
+3. **Inferencia real** con la clave emitida, directo con el SDK de OpenAI
+   contra `v1/models` y `v1/chat/completions` — el modelo
+   (`qwen2.5:3b`) respondió de verdad.
+4. `POST /ai/api-key/rotate` → nueva clave; la anterior murió al instante
+   (`401` confirmado contra el gateway).
+5. `DELETE /ai/api-key` → revocada; `GET /ai/api-key` vuelve a responder
+   `400` "No tienes una clave de IA activa", el estado limpio esperado.
+
+Los dos bloqueadores anteriores ya se resolvieron del lado del equipo de
+IA: el hostname correcto es `qa.api.idempotencia.andrescortes.dev` (no
+`docs.api...`), y la cuenta de servicio interna
+(`EXTERNAL_OWNER_USER_ID`) que hacía falta para aceptar altas externas ya
+está configurada.
